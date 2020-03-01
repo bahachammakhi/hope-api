@@ -9,9 +9,10 @@ const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
   process.env.DATABASE_PASSWORD
 );
+const DB_LOCAL = process.env.DATABASE_LOCAL;
 
 mongoose
-  .connect(DB, {
+  .connect(DB_LOCAL, {
     useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: false
