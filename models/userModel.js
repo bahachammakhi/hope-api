@@ -3,6 +3,11 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
+/**
+ * donation Schema
+ * @private
+ */
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -20,7 +25,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'guide', 'lead-guide', 'admin'],
+    enum: ['user', 'organization', 'helper', 'admin'],
     default: 'user'
   },
   password: {
@@ -45,6 +50,10 @@ const userSchema = new mongoose.Schema({
   passwordResetExpires: Date
 });
 
+/**
+ * Password hash middleware.
+ */
+
 userSchema.pre('save', async function(next) {
   // Only run this function if password was actually modified
   if (!this.isModified('password')) return next();
@@ -56,12 +65,20 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
+/**
+ * Password Changed time .
+ */
+
 userSchema.pre('save', function(next) {
   if (!this.isModified('password') || this.isNew) return next();
 
   this.passwordChangedAt = Date.now() - 1000;
   next();
 });
+
+/**
+ * Helper method for validating user's password.
+ */
 
 userSchema.methods.correctPassword = async function(
   candidatePassword,
@@ -81,6 +98,10 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
   //False means not changed
   return false;
 };
+
+/**
+ * Password reset Token.
+ */
 
 userSchema.methods.createPasswordResetToken = function() {
   const resetToken = crypto.randomBytes(32).toString('hex');
