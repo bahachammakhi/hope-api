@@ -4,6 +4,23 @@ const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
 
 /**
+ * Protect donation to be
+ * deleted or updated only from its Author!
+ * @private
+ */
+
+exports.authorProtected = catchAsync(async (req, res, next) => {
+  const passed = await Donation.findById(req.params.id);
+  if (!passed) {
+    return next(new AppError('No donation found with that id', 404));
+  }
+  // eslint-disable-next-line eqeqeq
+  if (passed.author._id != req.body.author) {
+    return next(new AppError('You are not the author of this post !', 401));
+  }
+  next();
+});
+/**
  * GET /donation
  * @public
  */
@@ -68,6 +85,10 @@ exports.getDonation = catchAsync(async (req, res, next) => {
  */
 
 exports.createDonation = catchAsync(async (req, res, next) => {
+  const visitorid = '5e642572d2508830889ec953';
+  if (req.body.visitor) {
+    req.body.author = visitorid;
+  }
   const newDonation = await Donation.create(req.body);
 
   res.status(201).json({
@@ -106,14 +127,6 @@ exports.updateDonation = catchAsync(async (req, res, next) => {
  * @private
  */
 exports.deleteDonation = catchAsync(async (req, res, next) => {
-  const passed = await Donation.findById(req.params.id);
-  if (!passed) {
-    return next(new AppError('No donation found with that id', 404));
-  }
-  // eslint-disable-next-line eqeqeq
-  if (passed.author._id != req.body.author) {
-    return next(new AppError('You are not the author of this post !', 401));
-  }
   const donation = await Donation.findByIdAndDelete(req.params.id);
   if (!donation) {
     return next(new AppError('No donation found with that id', 404));

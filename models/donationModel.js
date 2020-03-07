@@ -23,7 +23,8 @@ const donationSchema = new mongoose.Schema(
     },
     author: {
       type: mongoose.Schema.ObjectId,
-      ref: 'User'
+      ref: 'User',
+      required: [true, 'a Donation must have an author !']
     },
     slug: String,
     contact: {

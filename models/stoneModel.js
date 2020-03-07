@@ -10,38 +10,36 @@ const stoneSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'A Donation must have a name'],
+      required: [true, 'A stone must have a name'],
       trim: true,
       maxlength: [
         40,
-        'A Donation name must have less or equal then 40 characters'
+        'A stone name must have less or equal then 40 characters'
       ],
-      minlength: [
-        5,
-        'A Donation name must have more or equal then 10 characters'
-      ]
+      minlength: [5, 'A stone name must have more or equal then 10 characters']
     },
     author: {
       type: mongoose.Schema.ObjectId,
-      ref: 'User'
+      ref: 'User',
+      required: [true, 'A stone must have an author !']
     },
     slug: String,
     contact: {
       type: String,
       trim: true,
-      required: [true, 'A Donation must have a Contact']
+      required: [true, 'A stone must have a Contact']
     },
     description: {
       type: String,
       trim: true,
       minlength: [
         10,
-        'A Donation Description must have more or equa"l then 10 characters'
+        'A stone Description must have more or equa"l then 10 characters'
       ]
     },
     imageCover: {
       type: String,
-      required: [false, 'A Donation must have a cover image']
+      required: [false, 'A stone must have a cover image']
     },
     images: [String],
     createAt: {
@@ -49,8 +47,13 @@ const stoneSchema = new mongoose.Schema(
       default: Date.now(),
       select: false
     },
-    startDate: Date,
-    endData: Date
+    startDate: {
+      type: Date,
+      default: Date.now()
+    },
+    endData: Date,
+    but: Number,
+    currentValue: Number
   },
   {
     toJSON: { virtuals: true },
