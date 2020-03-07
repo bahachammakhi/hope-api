@@ -2,11 +2,11 @@ const mongoose = require('mongoose');
 // const slugify = require('slugify');
 
 /**
- * donation Schema
+ * stone Schema
  * @private
  */
 
-const donationSchema = new mongoose.Schema(
+const stoneSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -49,7 +49,8 @@ const donationSchema = new mongoose.Schema(
       default: Date.now(),
       select: false
     },
-    startDates: [Date]
+    startDate: Date,
+    endData: Date
   },
   {
     toJSON: { virtuals: true },
@@ -63,17 +64,17 @@ const donationSchema = new mongoose.Schema(
 
 //DOCUMENT MIDDLEWARE : RUNS BEFORE .save() and .create()
 
-// tourSchema.pre('save', function(next) {
-//   this.slug = slugify(this.name, { lower: true });
-//   next();
-// });
-
-donationSchema.pre('save', function(next) {
-  // eslint-disable-next-line no-console
-  console.log('Saving Donation..');
+stoneSchema.pre('save', function(next) {
+  this.slug = slugify(this.name, { lower: true });
   next();
 });
-donationSchema.pre(/^find/, function(next) {
+
+stoneSchema.pre('save', function(next) {
+  // eslint-disable-next-line no-console
+  console.log('Saving Stone..');
+  next();
+});
+stoneSchema.pre(/^find/, function(next) {
   this.populate({
     path: 'author'
   });
@@ -100,8 +101,8 @@ donationSchema.pre(/^find/, function(next) {
 //   next();
 // });
 /**
- * @typedef donationSchema
+ * @typedef stoneSchema
  */
 
-const Donation = mongoose.model('Donation', donationSchema);
-module.exports = Donation;
+const Stone = mongoose.model('Stone', stoneSchema);
+module.exports = Stone;

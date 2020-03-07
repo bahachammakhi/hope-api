@@ -10,14 +10,14 @@ router
   .route('/')
   .get(donationController.getAllDonations)
   .post(donationController.createDonation);
-
+router.route('/user/:id').get(donationController.getUserDonations);
 router
   .route('/:id')
   .get(donationController.getDonation)
   .patch(authController.protect, donationController.updateDonation)
   .delete(
     authController.protect,
-    authController.restrictTo('admin', 'lead-guide'),
+    // authController.restrictTo('admin', 'lead-guide'),
     donationController.deleteDonation
   );
 

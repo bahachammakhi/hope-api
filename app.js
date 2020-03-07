@@ -1,6 +1,6 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
-
+const cors = require('cors');
 const morgan = require('morgan');
 
 const AppError = require('./utils/appError');
@@ -30,6 +30,7 @@ app.use((req, res, next) => {
   // console.log(req.headers);
   next();
 });
+app.use(cors());
 
 /**
  * Primary app routes.

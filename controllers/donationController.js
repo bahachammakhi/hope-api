@@ -27,6 +27,24 @@ exports.getAllDonations = catchAsync(async (req, res, next) => {
 });
 
 /**
+ * GET /donation/user/:id
+ * @public
+ */
+exports.getUserDonations = catchAsync(async (req, res, next) => {
+  const donations = await Donation.find({ author: req.params.id });
+  if (!donations) {
+    return next(new AppError('No donation found with that id', 404));
+  }
+  // Tour.findOne({ _id:req.params.id })
+  res.status(200).json({
+    result: donations.length,
+    status: 'success',
+    data: {
+      donations
+    }
+  });
+});
+/**
  * GET /donation/:id
  * @public
  */
@@ -81,11 +99,21 @@ exports.updateDonation = catchAsync(async (req, res, next) => {
     }
   });
 });
+
 /**
  * DELETE /donation/:id
+ * User must own the donation to delete it !
  * @private
  */
 exports.deleteDonation = catchAsync(async (req, res, next) => {
+  const passed = await Donation.findById(req.params.id);
+  if (!passed) {
+    return next(new AppError('No donation found with that id', 404));
+  }
+  // eslint-disable-next-line eqeqeq
+  if (passed.author._id != req.body.author) {
+    return next(new AppError('You are not the author of this post !', 401));
+  }
   const donation = await Donation.findByIdAndDelete(req.params.id);
   if (!donation) {
     return next(new AppError('No donation found with that id', 404));
