@@ -9,6 +9,7 @@ const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const donationRouter = require('./routes/donationRoutes');
 const stoneRouter = require('./routes/stoneRoutes');
+const contactRouter = require('./routes/contactRoutes');
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/donations', donationRouter);
 app.use('/api/v1/stones', stoneRouter);
+app.use('/api/v1/contacts', contactRouter);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server !`, 404));
