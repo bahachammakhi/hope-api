@@ -8,11 +8,11 @@ cloudinary.config({
   api_secret: process.env.API_SECRET
 });
 const uniqueFilename = new Date().toISOString();
-const uploadCloud = file => {
+const uploadCloud = (file, collection) => {
   return new Promise(resolve => {
     cloudinary.uploader.upload(
       file,
-      { public_id: `stones/${uniqueFilename}`, tags: `stones` }, // directory and tags are optional
+      { public_id: `${collection}/${uniqueFilename}`, tags: `stones` }, // directory and tags are optional
       (err, image) => {
         if (err) {
           console.log('err', err);

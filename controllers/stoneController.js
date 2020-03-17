@@ -90,13 +90,13 @@ exports.createStone = catchAsync(async (req, res, next) => {
   const resPromises = req.files.images.map(
     file =>
       new Promise((resolve, eject) => {
-        cloudinary(file.path).then(result => {
+        cloudinary(file.path, 'stones').then(result => {
           resolve(result.secure_url);
         });
       })
   );
   Promise.all(resPromises).then(async resultArray => {
-    cloudinary(req.files.imageCover[0].path).then(async result => {
+    cloudinary(req.files.imageCover[0].path, 'stones').then(async result => {
       req.body.imageCover = result.secure_url;
       req.body.images = resultArray;
       const newStone = await Stone.create(req.body);

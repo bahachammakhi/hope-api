@@ -12,10 +12,6 @@ const donationSchema = new mongoose.Schema(
       type: String,
       required: [true, 'A Donation must have a name'],
       trim: true,
-      maxlength: [
-        40,
-        'A Donation name must have less or equal then 40 characters'
-      ],
       minlength: [
         5,
         'A Donation name must have more or equal then 10 characters'

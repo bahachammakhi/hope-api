@@ -2,6 +2,7 @@ const Donation = require('./../models/donationModel');
 const User = require('./../models/userModel');
 const APIFeatures = require('./../utils/apiFeatures');
 const catchAsync = require('./../utils/catchAsync');
+const cloudinary = require('../utils/cloudinayConfig');
 const AppError = require('./../utils/appError');
 
 /**
@@ -94,13 +95,32 @@ exports.createDonation = catchAsync(async (req, res, next) => {
   if (!exist) {
     return next(new AppError('No User found with that id', 404));
   }
-  const newDonation = await Donation.create(req.body);
+  if (req.files === null) {
+    return next(new AppError('Please provide a picture', 404));
+  }
+  console.log('file uploaded to server');
 
-  res.status(201).json({
-    status: 'success',
-    data: {
-      donation: newDonation
-    }
+  const resPromises = req.files.images.map(
+    file =>
+      new Promise((resolve, eject) => {
+        cloudinary(file.path, 'donations').then(result => {
+          resolve(result.secure_url);
+        });
+      })
+  );
+  Promise.all(resPromises).then(async resultArray => {
+    cloudinary(req.files.imageCover[0].path, 'donations').then(async result => {
+      req.body.imageCover = result.secure_url;
+      req.body.images = resultArray;
+      const newDonation = await Donation.create(req.body);
+
+      res.status(201).json({
+        status: 'success',
+        data: {
+          donation: newDonation
+        }
+      });
+    });
   });
 });
 

@@ -12,10 +12,6 @@ const stoneSchema = new mongoose.Schema(
       type: String,
       required: [true, 'A stone must have a name'],
       trim: true,
-      maxlength: [
-        40,
-        'A stone name must have less or equal then 40 characters'
-      ],
       minlength: [5, 'A stone name must have more or equal then 10 characters']
     },
     author: {
@@ -39,7 +35,7 @@ const stoneSchema = new mongoose.Schema(
     },
     imageCover: {
       type: String,
-      required: [false, 'A stone must have a cover image']
+      required: [true, 'A stone must have a cover image']
     },
     images: [String],
     createAt: {
@@ -51,7 +47,7 @@ const stoneSchema = new mongoose.Schema(
       type: Date,
       default: Date.now()
     },
-    endData: Date,
+    endDate: Date,
     but: Number,
     currentValue: Number
   },
