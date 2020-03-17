@@ -1,4 +1,5 @@
 const Donation = require('./../models/donationModel');
+const User = require('./../models/userModel');
 const APIFeatures = require('./../utils/apiFeatures');
 const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
@@ -85,9 +86,13 @@ exports.getDonation = catchAsync(async (req, res, next) => {
  */
 
 exports.createDonation = catchAsync(async (req, res, next) => {
-  const visitorid = '5e642572d2508830889ec953';
-  if (req.body.visitor) {
-    req.body.author = visitorid;
+  // const visitorid = '5e642572d2508830889ec953';
+  // if (req.body.visitor) {
+  //   req.body.author = visitorid;
+  // }
+  const exist = await User.findById(req.body.author);
+  if (!exist) {
+    return next(new AppError('No User found with that id', 404));
   }
   const newDonation = await Donation.create(req.body);
 

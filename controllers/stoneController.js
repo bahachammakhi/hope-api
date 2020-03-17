@@ -1,6 +1,8 @@
 const Stone = require('./../models/stoneModel');
 const APIFeatures = require('./../utils/apiFeatures');
 const catchAsync = require('./../utils/catchAsync');
+const upload = require('../utils/multerConfig');
+const cloudinary = require('../utils/cloudinayConfig');
 const AppError = require('./../utils/appError');
 
 exports.authorProtected = catchAsync(async (req, res, next) => {
@@ -80,13 +82,26 @@ exports.getStone = catchAsync(async (req, res, next) => {
  */
 
 exports.createStone = catchAsync(async (req, res, next) => {
-  const newStone = await Stone.create(req.body);
-
-  res.status(201).json({
-    status: 'success',
-    data: {
-      stone: newStone
+  upload(req, res, async function(err) {
+    if (err) {
+      return res.send(err);
     }
+    console.log('file uploaded to server');
+    // console.log(req.file);
+
+    // SEND FILE TO CLOUDINARY
+
+    cloudinary(req.file.path).then(async result => {
+      console.log('result', result.secure_url);
+      req.body.imageCover = result.secure_url;
+      const newStone = await Stone.create(req.body);
+      res.status(201).json({
+        status: 'success',
+        data: {
+          stone: newStone
+        }
+      });
+    });
   });
 });
 

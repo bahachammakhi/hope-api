@@ -2,6 +2,8 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const morgan = require('morgan');
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -12,7 +14,24 @@ const stoneRouter = require('./routes/stoneRoutes');
 const contactRouter = require('./routes/contactRoutes');
 
 const app = express();
-
+// const storage = multer.diskStorage({
+//   destination: function(req, file, cb) {
+//     cb(null, 'uploads/');
+//   },
+//   filename: function(req, file, cb) {
+//     console.log(file);
+//     cb(null, file.originalname);
+//   }
+// });
+exports.storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function(req, file, cb) {
+    console.log(file);
+    cb(null, file.originalname);
+  }
+});
 /**
  * Primary app MiddleWears.
  */
