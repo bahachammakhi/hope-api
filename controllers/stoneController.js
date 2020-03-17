@@ -83,20 +83,26 @@ exports.getStone = catchAsync(async (req, res, next) => {
 
 exports.createStone = catchAsync(async (req, res, next) => {
   if (req.files === null) {
-    return next(new AppError('Please provide a picture', 404));
+    return next(new AppError('Please provide a picture', 400));
   }
   console.log('file uploaded to server');
-
+  if (!req.files.images) {
+    return next(new AppError('Please put some images ! ', 400));
+  }
   const resPromises = req.files.images.map(
     file =>
       new Promise((resolve, eject) => {
-        cloudinary(file.path, 'stones').then(result => {
+        cloudinary(file.path, file.filename, 'stones').then(result => {
           resolve(result.secure_url);
         });
       })
   );
   Promise.all(resPromises).then(async resultArray => {
-    cloudinary(req.files.imageCover[0].path, 'stones').then(async result => {
+    cloudinary(
+      req.files.imageCover[0].path,
+      req.files.imageCover[0].filename,
+      'stones'
+    ).then(async result => {
       req.body.imageCover = result.secure_url;
       req.body.images = resultArray;
       const newStone = await Stone.create(req.body);
