@@ -8,14 +8,16 @@ cloudinary.config({
   api_secret: process.env.API_SECRET
 });
 const uniqueFilename = new Date().toISOString();
-const uploadCloud = (file, next) => {
+const uploadCloud = file => {
   return new Promise(resolve => {
     cloudinary.uploader.upload(
       file,
       { public_id: `stones/${uniqueFilename}`, tags: `stones` }, // directory and tags are optional
       (err, image) => {
-        if (err)
-          return next(new AppError('Cant Upload file to cloudinary', 404));
+        if (err) {
+          console.log('err', err);
+          return null;
+        }
         console.log('file uploaded to Cloudinary');
         // remove file from server
         fs.unlinkSync(file);
