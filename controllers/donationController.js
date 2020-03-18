@@ -1,6 +1,8 @@
+const cloudinary2 = require('cloudinary').v2;
 const Donation = require('./../models/donationModel');
 const User = require('./../models/userModel');
 const APIFeatures = require('./../utils/apiFeatures');
+const deleteUploadFolder = require('../utils/deleteUploadFolder');
 const catchAsync = require('./../utils/catchAsync');
 const cloudinary = require('../utils/cloudinayConfig');
 const AppError = require('./../utils/appError');
@@ -22,6 +24,23 @@ exports.authorProtected = catchAsync(async (req, res, next) => {
   }
   next();
 });
+
+/**
+ * images Required
+ * @public
+ *  req.files needs to contain files.images and files.imageCover
+ */
+
+exports.imagesRequired = catchAsync(async (req, res, next) => {
+  if (req.files === null) {
+    return next(new AppError('Please provide a picture', 400));
+  }
+  if (!req.files.images) {
+    return next(new AppError('Please put some images ! ', 400));
+  }
+  next();
+});
+
 /**
  * GET /donation
  * @public
@@ -40,8 +59,8 @@ exports.getAllDonations = catchAsync(async (req, res, next) => {
     status: 'success',
     results: donations.length,
     data: {
-      donations
-    }
+      donations,
+    },
   });
 });
 
@@ -49,6 +68,7 @@ exports.getAllDonations = catchAsync(async (req, res, next) => {
  * GET /donation/user/:id
  * @public
  */
+
 exports.getUserDonations = catchAsync(async (req, res, next) => {
   const donations = await Donation.find({ author: req.params.id });
   if (!donations) {
@@ -59,10 +79,11 @@ exports.getUserDonations = catchAsync(async (req, res, next) => {
     result: donations.length,
     status: 'success',
     data: {
-      donations
-    }
+      donations,
+    },
   });
 });
+
 /**
  * GET /donation/:id
  * @public
@@ -77,56 +98,65 @@ exports.getDonation = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: {
-      donation
-    }
+      donation,
+    },
   });
 });
+
+/**
+ * Upload image and images to cloudinary
+ * @public
+ */
+
+exports.uploadPicstoCloudinary = catchAsync(async (req, res, next) => {
+  //uploading images to cloudinary
+  const resPromises = await req.files.images.map(
+    file =>
+      new Promise((resolve, eject) => {
+        cloudinary(file.path, file.filename, 'donations').then(result => {
+          const imagesResult = {
+            secure_url: result.secure_url,
+            public_id: result.public_id,
+          };
+          resolve(imagesResult);
+        });
+      })
+  );
+  const resultArray = await Promise.all(resPromises);
+  // upload imageCover
+  const result = await cloudinary(
+    req.files.imageCover[0].path,
+    req.files.imageCover[0].filename,
+    'donations'
+  );
+  // took only secure url and public id from res
+  const imageCoverResult = {
+    secure_url: result.secure_url,
+    public_id: result.public_id,
+  };
+  // putting urls on the body imageCover and images
+  req.body.imageCover = imageCoverResult;
+  req.body.images = resultArray;
+  next();
+});
+
 /**
  * POST /donation
  * @public
  */
 
 exports.createDonation = catchAsync(async (req, res, next) => {
-  // const visitorid = '5e642572d2508830889ec953';
-  // if (req.body.visitor) {
-  //   req.body.author = visitorid;
-  // }
   const exist = await User.findById(req.body.author);
   if (!exist) {
     return next(new AppError('No User found with that id', 404));
   }
-  if (req.files === null) {
-    return next(new AppError('Please provide a picture', 400));
-  }
-  console.log('file uploaded to server');
-  if (!req.files.images) {
-    return next(new AppError('Please put some images ! ', 400));
-  }
-  const resPromises = req.files.images.map(
-    file =>
-      new Promise((resolve, eject) => {
-        cloudinary(file.path, file.filename, 'donations').then(result => {
-          resolve(result.secure_url);
-        });
-      })
-  );
-  Promise.all(resPromises).then(async resultArray => {
-    cloudinary(
-      req.files.imageCover[0].path,
-      req.files.imageCover[0].filename,
-      'donations'
-    ).then(async result => {
-      req.body.imageCover = result.secure_url;
-      req.body.images = resultArray;
-      const newDonation = await Donation.create(req.body);
-
-      res.status(201).json({
-        status: 'success',
-        data: {
-          donation: newDonation
-        }
-      });
-    });
+  const newDonation = await Donation.create(req.body);
+  deleteUploadFolder();
+  res.status(201).json({
+    status: 'success',
+    data: {
+      donation: newDonation,
+    },
   });
 });
 
@@ -134,10 +164,11 @@ exports.createDonation = catchAsync(async (req, res, next) => {
  * PATCH /donation/:id
  * @private
  */
+
 exports.updateDonation = catchAsync(async (req, res, next) => {
   const donation = await Donation.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
-    runValidators: true
+    runValidators: true,
   });
 
   if (!donation) {
@@ -147,9 +178,25 @@ exports.updateDonation = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: {
-      donation
-    }
+      donation,
+    },
   });
+});
+
+/**
+ * DELETE cloudinary pics
+ * Before deleting Stone
+ * @private
+ */
+
+exports.deleteCloudinaryPics = catchAsync(async (req, res, next) => {
+  const { imageCover, images } = await Donation.findById(req.params.id, 'imageCover images');
+  await cloudinary2.uploader.destroy(imageCover.public_id, () => {
+    images.forEach(el => {
+      cloudinary2.uploader.destroy(el.public_id, () => {});
+    });
+  });
+  next();
 });
 
 /**
@@ -157,6 +204,7 @@ exports.updateDonation = catchAsync(async (req, res, next) => {
  * User must own the donation to delete it !
  * @private
  */
+
 exports.deleteDonation = catchAsync(async (req, res, next) => {
   const donation = await Donation.findByIdAndDelete(req.params.id);
   if (!donation) {
@@ -165,6 +213,6 @@ exports.deleteDonation = catchAsync(async (req, res, next) => {
 
   res.status(204).json({
     status: 'success',
-    data: null
+    data: null,
   });
 });

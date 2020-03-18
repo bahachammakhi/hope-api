@@ -16,8 +16,8 @@ exports.getAllContacts = catchAsync(async (req, res, next) => {
     status: 'success',
     results: contacts.length,
     data: {
-      contacts
-    }
+      contacts,
+    },
   });
 });
 exports.createContact = catchAsync(async (req, res, next) => {
@@ -26,8 +26,8 @@ exports.createContact = catchAsync(async (req, res, next) => {
   res.status(201).json({
     status: 'success',
     data: {
-      contact: newContact
-    }
+      contact: newContact,
+    },
   });
 });
 
@@ -39,6 +39,6 @@ exports.deleteContact = catchAsync(async (req, res, next) => {
 
   res.status(204).json({
     status: 'success',
-    data: null
+    data: null,
   });
 });

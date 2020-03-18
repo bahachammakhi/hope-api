@@ -34,10 +34,18 @@ const stoneSchema = new mongoose.Schema(
       ]
     },
     imageCover: {
-      type: String,
-      required: [true, 'A stone must have a cover image']
+      type: {
+        secure_url: String,
+        public_id: String
+      },
+      required: [true, 'A stone must have an imageCover']
     },
-    images: [String],
+    images: [
+      {
+        secure_url: String,
+        public_id: String
+      }
+    ],
     createAt: {
       type: Date,
       default: Date.now(),

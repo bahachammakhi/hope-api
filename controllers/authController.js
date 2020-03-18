@@ -8,7 +8,7 @@ const sendEmail = require('./../utils/email');
 
 const signToken = id => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN
+    expiresIn: process.env.JWT_EXPIRES_IN,
   });
 };
 
@@ -16,10 +16,8 @@ const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
 
   const cookieOptions = {
-    expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-    ),
-    httpOnly: true
+    expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
+    httpOnly: true,
   };
   if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
 
@@ -32,8 +30,8 @@ const createSendToken = (user, statusCode, res) => {
     status: 'succes',
     token,
     data: {
-      user: user
-    }
+      user: user,
+    },
   });
 };
 
@@ -45,7 +43,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     passwordConfirm: req.body.passwordConfirm,
     photo: req.body.photo,
     passwordChangedAt: req.body.passwordChangedAt,
-    role: req.body.role
+    role: req.body.role,
   });
   createSendToken(newUser, 201, res);
 });
@@ -71,17 +69,12 @@ exports.login = catchAsync(async (req, res, next) => {
 exports.protect = catchAsync(async (req, res, next) => {
   // 1 getting token and check if its there
   let token;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
   }
 
   if (!token) {
-    return next(
-      new AppError('Your are not logged in! Please login to get access', 401)
-    );
+    return next(new AppError('Your are not logged in! Please login to get access', 401));
   }
   //2 Verfication the token
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
@@ -89,18 +82,11 @@ exports.protect = catchAsync(async (req, res, next) => {
   //3 Check if user still exists
   const freshUser = await User.findById(decoded.id);
   if (!freshUser) {
-    return next(
-      new AppError(
-        'The user belonging to this token does not longer exist.',
-        401
-      )
-    );
+    return next(new AppError('The user belonging to this token does not longer exist.', 401));
   }
   //4 Check if user change password after the JWT was issued
   if (freshUser.changedPasswordAfter(decoded.iat)) {
-    return next(
-      new AppError('User recently changed password! Please login again', 401)
-    );
+    return next(new AppError('User recently changed password! Please login again', 401));
   }
 
   // GRANT ACCES TO PROTECT ROUTE
@@ -112,9 +98,7 @@ exports.restrictTo = (...roles) => {
   return (req, res, next) => {
     // roles is an array ['admin', 'lead-guide']. role = 'user'
     if (!roles.includes(req.user.role)) {
-      return next(
-        new AppError('You do not have perrmisson to perform this action', 403)
-      );
+      return next(new AppError('You do not have perrmisson to perform this action', 403));
     }
     next();
   };
@@ -131,9 +115,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   const resetToken = user.createPasswordResetToken();
   await user.save({ validateBeforeSave: false });
   //3 send it back as an email
-  const resetURL = `${req.protocol}://${req.get(
-    'host'
-  )}/api/v1/users/resetPassword/${resetToken}`;
+  const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
 
   const message = `Forget your password? submit a patch request with your new password and password confirm to : ${resetURL}.\n if you didint forget your password, Please ignore this email!`;
 
@@ -141,12 +123,12 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     await sendEmail({
       email: user.email,
       subject: 'Your password Reset token (valid for 10 min)!',
-      message
+      message,
     });
 
     res.status(200).json({
       status: 'success',
-      message: 'Token sent to email!'
+      message: 'Token sent to email!',
     });
   } catch (err) {
     console.log(err);
@@ -154,9 +136,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     user.passwordResetExpires = undefined;
     await user.save({ validateBeforeSave: false });
 
-    return next(
-      new AppError('There was an error sending the email try again later', 500)
-    );
+    return next(new AppError('There was an error sending the email try again later', 500));
   }
 });
 exports.resetPassword = catchAsync(async (req, res, next) => {
@@ -168,7 +148,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
   const user = await User.findOne({
     passwordResetToken: hashedToken,
-    passwordResetExpires: { $gt: Date.now() }
+    passwordResetExpires: { $gt: Date.now() },
   });
 
   //2 if token not expired , and there is a user , set the new password

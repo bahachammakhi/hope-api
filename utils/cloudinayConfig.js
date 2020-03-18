@@ -1,11 +1,10 @@
 const fs = require('fs');
 const cloudinary = require('cloudinary').v2;
-const AppError = require('./appError');
 
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.API_KEY,
-  api_secret: process.env.API_SECRET
+  api_secret: process.env.API_SECRET,
 });
 const uniqueFilename = new Date().toISOString();
 const uploadCloud = (file, filename, collection) => {
@@ -14,14 +13,14 @@ const uploadCloud = (file, filename, collection) => {
       file,
       {
         public_id: `${collection}/${uniqueFilename}${filename}`,
-        tags: `stones`
+        tags: `stones`,
       }, // directory and tags are optional
       (err, image) => {
         if (err) {
           console.log('err', err);
           return null;
         }
-        console.log('file uploaded to Cloudinary');
+        // console.log('file uploaded to Cloudinary');
         // remove file from server
         fs.unlinkSync(file);
         // return image details
@@ -30,4 +29,5 @@ const uploadCloud = (file, filename, collection) => {
     );
   });
 };
+
 module.exports = uploadCloud;
